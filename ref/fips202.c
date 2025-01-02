@@ -7,8 +7,10 @@
 
 #include <stddef.h>
 #include <stdint.h>
+#include <stdio.h>
 
 #include "fips202.h"
+#include "memutils.h"
 
 #define NROUNDS 24
 #define ROL(a, offset) (((a) << (offset)) ^ ((a) >> (64 - (offset))))
@@ -83,6 +85,10 @@ static void KeccakF1600_StatePermute(uint64_t *state) {
     uint64_t Eka, Eke, Eki, Eko, Eku;
     uint64_t Ema, Eme, Emi, Emo, Emu;
     uint64_t Esa, Ese, Esi, Eso, Esu;
+
+    //uint64_t phys = get_physical_address(state);
+    //ssize_t offset = get_stack_offset(state);
+    //printf("phys = %lx, offset = %ld\n", phys, offset);
 
     // copyFromState(A, state)
     Aba = state[0];

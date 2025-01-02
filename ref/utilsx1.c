@@ -1,4 +1,5 @@
 #include <string.h>
+#include <stdio.h>
 
 #include "utils.h"
 #include "utilsx1.h"
@@ -6,6 +7,7 @@
 #include "thash.h"
 #include "address.h"
 
+//int do_flip = 0;
 /*
  * Generate the entire Merkle tree, computing the authentication path for
  * leaf_idx, and the resulting root node using Merkle's TreeHash algorithm.
@@ -32,7 +34,7 @@ void treehashx1(unsigned char *root, unsigned char *auth_path,
                 void *info)
 {
     /* This is where we keep the intermediate nodes */
-    SPX_VLA(uint8_t, stack, tree_height*SPX_N);
+    SPX_VLA(uint8_t, stack, tree_height*SPX_N);  // expands: uint8_t stack[tree_height*SPX_N];
 
     uint32_t idx;
     uint32_t max_idx = (uint32_t)((1 << tree_height) - 1);
@@ -48,7 +50,7 @@ void treehashx1(unsigned char *root, unsigned char *auth_path,
         uint32_t internal_idx_offset = idx_offset;
         uint32_t internal_idx = idx;
         uint32_t internal_leaf = leaf_idx;
-        uint32_t h;     /* The height we are in the Merkle tree */
+        volatile uint32_t h;     /* The height we are in the Merkle tree */
         for (h=0;; h++, internal_idx >>= 1, internal_leaf >>= 1) {
 
             /* Check if we hit the top of the tree */
@@ -85,8 +87,15 @@ void treehashx1(unsigned char *root, unsigned char *auth_path,
             internal_idx_offset >>= 1;
             set_tree_height(tree_addr, h + 1);
             set_tree_index(tree_addr, internal_idx/2 + internal_idx_offset );
-
+            // FAULT stack[h*SPX_N+x] for 0 <= x < SPX_N here
             unsigned char *left = &stack[h * SPX_N];
+            /*uint64_t phys = get_physical_address(left);
+            ssize_t offset = get_stack_offset(left);
+            printf("left = %p, phys = %lx, offset = %ld\n", left, phys, offset);
+            if (do_flip) {
+                left[7] = left[7] ^ 1<<3;
+            }
+            */
             memcpy( &current[0], left, SPX_N );
             thash( &current[1 * SPX_N],
                    &current[0 * SPX_N],

@@ -100,7 +100,7 @@ int crypto_sign_signature(uint8_t *sig, size_t *siglen,
     const unsigned char *sk_prf = sk + SPX_N;
     const unsigned char *pk = sk + 2*SPX_N;
 
-    unsigned char optrand[SPX_N];
+    unsigned char optrand[SPX_N] = {0};
     unsigned char mhash[SPX_FORS_MSG_BYTES];
     unsigned char root[SPX_N];
     uint32_t i;
@@ -122,7 +122,7 @@ int crypto_sign_signature(uint8_t *sig, size_t *siglen,
     /* Optionally, signing can be made non-deterministic using optrand.
        This can help counter side-channel attacks that would benefit from
        getting a large number of traces when the signer uses the same nodes. */
-    randombytes(optrand, SPX_N);
+    //randombytes(optrand, SPX_N);
     /* Compute the digest randomization value. */
     gen_message_random(sig, sk_prf, optrand, m, mlen, &ctx);
 
@@ -249,6 +249,7 @@ int crypto_sign(unsigned char *sm, unsigned long long *smlen,
 {
     size_t siglen;
 
+    // return value not checked
     crypto_sign_signature(sm, &siglen, m, (size_t)mlen, sk);
 
     memmove(sm + SPX_BYTES, m, mlen);
